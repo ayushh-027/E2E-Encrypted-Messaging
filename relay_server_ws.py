@@ -11,7 +11,8 @@ import websockets
 # yeh harmless hai, actual chat clients hamesha proper GET+Upgrade bhejte hain.
 logging.getLogger("websockets").setLevel(logging.CRITICAL)
 
-clients = {}  # username -> websocket connection
+clients = {}   # username -> websocket connection
+pending = {}   # username -> list of queued messages waiting for them to connect
 
 
 def process_request(connection, request):
@@ -34,6 +35,16 @@ async def handler(websocket):
                 print(f"[+] {username} connected")
                 await websocket.send(json.dumps({"type": "ok"}))
 
+                # Jo messages iske offline rehte hue aaye the (jaise partner
+                # ki public key), unhe ab deliver kar do
+                queued = pending.pop(username, [])
+                for item in queued:
+                    await websocket.send(json.dumps({
+                        "type": "from",
+                        "sender": item["sender"],
+                        "payload": item["payload"]
+                    }))
+
             elif data["type"] == "msg":
                 target = data["target"]
                 if target in clients:
@@ -43,9 +54,15 @@ async def handler(websocket):
                         "payload": data["payload"]
                     }))
                 else:
+                    # Target abhi tak connect nahi hua - message discard mat karo,
+                    # queue mein daal do, jab wo register karega tab deliver ho jayega
+                    pending.setdefault(target, []).append({
+                        "sender": username,
+                        "payload": data["payload"]
+                    })
                     await websocket.send(json.dumps({
                         "type": "error",
-                        "message": f"{target} is offline or doesn't exist"
+                        "message": f"{target} abhi offline hai, message unke connect hote hi deliver ho jayega"
                     }))
 
     except websockets.exceptions.ConnectionClosed:
