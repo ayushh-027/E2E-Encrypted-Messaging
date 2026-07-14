@@ -10,30 +10,44 @@
 </head>
 <body>
     <div id="app">
-        <!-- Screen 1: Connect -->
+        <!-- Screen 1: Lobby (create or join a room) -->
         <div id="screen1" class="screen">
             <div class="card">
                 <h1>E2E Encrypted Chat</h1>
                 <p class="subtitle">Secure WebSocket Relay</p>
-                
-                <form id="connectForm">
+
+                <div class="form-group">
+                    <label for="wsUrl">WebSocket URL</label>
+                    <input type="text" id="wsUrl" value="wss://e2e-encrypted-messaging.onrender.com" autocomplete="off">
+                </div>
+
+                <!-- Mode picker -->
+                <div id="modeSelect" class="mode-select">
+                    <button type="button" id="createRoomBtn">Create Room</button>
+                    <button type="button" id="joinRoomBtn" class="btn-outline">Join Room</button>
+                </div>
+
+                <!-- Join-with-code form -->
+                <form id="joinForm" class="hidden">
                     <div class="form-group">
-                        <label for="wsUrl">WebSocket URL</label>
-                        <input type="text" id="wsUrl" value="wss://e2e-encrypted-messaging.onrender.com" required>
+                        <label for="roomCodeInput">Room Code</label>
+                        <input type="text" id="roomCodeInput" class="code-input" placeholder="ABCDE" maxlength="5" autocomplete="off">
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="username">Your Username</label>
-                        <input type="text" id="username" placeholder="alice" required autocomplete="off">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="targetUsername">Target Username</label>
-                        <input type="text" id="targetUsername" placeholder="bob" required autocomplete="off">
-                    </div>
-                    
-                    <button type="submit" id="connectBtn">Connect</button>
+                    <button type="submit" id="joinSubmitBtn">Join</button>
+                    <button type="button" id="joinBackBtn" class="btn-link">← Back</button>
                 </form>
+
+                <!-- Waiting / room-code display -->
+                <div id="waitingPanel" class="hidden">
+                    <p class="waiting-label">Share this code with your partner</p>
+                    <div class="room-code-display" id="roomCodeDisplay">•••••</div>
+                    <button type="button" id="copyCodeBtn" class="btn-outline">Copy Code</button>
+                    <div class="waiting-row">
+                        <span class="spinner"></span>
+                        <p class="waiting-status" id="waitingStatus">Creating room...</p>
+                    </div>
+                    <button type="button" id="cancelRoomBtn" class="btn-link">Cancel</button>
+                </div>
             </div>
         </div>
 
@@ -41,10 +55,10 @@
         <div id="screen2" class="screen hidden">
             <div class="chat-header">
                 <div class="header-info">
-                    <h2>Chat with <span id="chatTargetName"></span></h2>
+                    <h2 id="chatTargetName">Room</h2>
                     <div id="statusIndicator" class="status yellow">Connecting...</div>
                 </div>
-                <button id="disconnectBtn" class="btn-small" type="button">Disconnect</button>
+                <button id="disconnectBtn" class="btn-small" type="button">Leave</button>
             </div>
             
             <div id="messages" class="messages-container"></div>
