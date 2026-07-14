@@ -12,6 +12,7 @@ const UI = {
     roomCodeDisplay: document.getElementById('roomCodeDisplay'),
     copyCodeBtn: document.getElementById('copyCodeBtn'),
     waitingStatus: document.getElementById('waitingStatus'),
+    loadingSpinner: document.getElementById('loadingSpinner'), // Added spinner reference
     cancelRoomBtn: document.getElementById('cancelRoomBtn'),
     messagesDiv: document.getElementById('messages'),
     chatForm: document.getElementById('chatForm'),
@@ -86,6 +87,7 @@ function startFlow(mode, code) {
     UI.modeSelect.classList.add('hidden');
     UI.joinForm.classList.add('hidden');
     UI.waitingPanel.classList.remove('hidden');
+    UI.loadingSpinner.classList.remove('hide-spinner'); // Ensure spinner is visible
     roomCode = mode === 'join' ? code : '';
     UI.roomCodeDisplay.textContent = mode === 'join' ? code : '•••••';
     UI.waitingStatus.textContent = mode === 'create' ? 'Creating room...' : 'Joining room...';
@@ -140,12 +142,20 @@ function connectSocket(mode, code) {
             UI.chatInput.disabled = true;
             UI.sendBtn.disabled = true;
         } else if (!UI.waitingPanel.classList.contains('hidden')) {
-            UI.waitingStatus.textContent = 'Connection lost.';
+            // Handle error when waiting for connection
+            UI.waitingStatus.textContent = 'Connection failed. Is the server running?';
+            UI.loadingSpinner.classList.add('hide-spinner');
+            UI.roomCodeDisplay.textContent = 'ERROR';
         }
     };
 
     ws.onerror = (error) => {
         console.error('WS error', error);
+        if (!UI.waitingPanel.classList.contains('hidden')) {
+            UI.waitingStatus.textContent = 'Connection error. Check URL and server.';
+            UI.loadingSpinner.classList.add('hide-spinner');
+            UI.roomCodeDisplay.textContent = 'ERROR';
+        }
     };
 }
 
@@ -182,6 +192,7 @@ function handleServerMessage(data) {
                 addSystemMessage('Error: ' + data.message, 'error');
             } else {
                 UI.waitingStatus.textContent = data.message;
+                UI.loadingSpinner.classList.add('hide-spinner');
             }
             break;
 
