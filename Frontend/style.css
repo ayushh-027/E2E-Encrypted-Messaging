@@ -451,3 +451,8 @@ button:disabled {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-muted);
 }
+
+/* Utility to hide the spinner on errors */
+.hide-spinner {
+    display: none !important;
+}
