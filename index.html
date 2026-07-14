@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E2E Encrypted Chat</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- JSEncrypt for RSA-2048 with PKCS#1 v1.5 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Screen 1: Connect -->
+        <div id="screen1" class="screen">
+            <div class="card">
+                <h1>E2E Encrypted Chat</h1>
+                <p class="subtitle">Secure WebSocket Relay</p>
+                
+                <form id="connectForm">
+                    <div class="form-group">
+                        <label for="wsUrl">WebSocket URL</label>
+                        <input type="text" id="wsUrl" value="wss://e2e-encrypted-messaging.onrender.com" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="username">Your Username</label>
+                        <input type="text" id="username" placeholder="alice" required autocomplete="off">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="targetUsername">Target Username</label>
+                        <input type="text" id="targetUsername" placeholder="bob" required autocomplete="off">
+                    </div>
+                    
+                    <button type="submit" id="connectBtn">Connect</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Screen 2: Chat -->
+        <div id="screen2" class="screen hidden">
+            <div class="chat-header">
+                <div class="header-info">
+                    <h2>Chat with <span id="chatTargetName"></span></h2>
+                    <div id="statusIndicator" class="status yellow">Connecting...</div>
+                </div>
+                <button id="disconnectBtn" class="btn-small" type="button">Disconnect</button>
+            </div>
+            
+            <div id="messages" class="messages-container"></div>
+            
+            <form id="chatForm" class="chat-input-area">
+                <div class="input-wrapper">
+                    <input type="text" id="chatInput" placeholder="Type an encrypted message..." autocomplete="off" disabled>
+                    <div id="charCounter" class="char-counter">0 / 245</div>
+                </div>
+                <button type="submit" id="sendBtn" disabled>
+                    <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="app.js" defer></script>
+</body>
+</html>

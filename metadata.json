@@ -1,0 +1,6 @@
+{
+  "name": "E2E Encrypted WS Chat",
+  "description": "A single-page vanilla JS frontend for a secure end-to-end encrypted WebSocket chat relay, leveraging client-side RSA-2048 keypairs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
