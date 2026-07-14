@@ -154,6 +154,101 @@ button:disabled {
     cursor: not-allowed;
 }
 
+/* --- Lobby: create/join room --- */
+
+.mode-select {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+}
+
+.btn-outline:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.btn-link {
+    width: auto;
+    margin: 12px auto 0;
+    padding: 4px 8px;
+    background: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-decoration: underline;
+}
+
+.btn-link:hover {
+    background: none;
+    color: var(--text-main);
+}
+
+#joinForm #joinSubmitBtn {
+    margin-top: 4px;
+}
+
+.code-input {
+    text-align: center;
+    font-size: 1.4rem;
+    letter-spacing: 0.35em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+#waitingPanel {
+    text-align: center;
+}
+
+.waiting-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 14px;
+}
+
+.room-code-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    background-color: rgba(15, 23, 42, 0.6);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 18px 10px;
+    margin-bottom: 16px;
+    color: var(--primary);
+}
+
+.waiting-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.waiting-status {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 /* Screen 2 */
 .chat-header {
     background-color: var(--card-bg);
@@ -169,6 +264,8 @@ button:disabled {
     font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
 }
 
 .status {
