@@ -6,11 +6,22 @@ import random
 from http import HTTPStatus
 import websockets
 
-# websockets library sirf HEAD requests parse nahi kar paati (RFC 6455 mein
-# sirf GET allowed hai). Aise stray requests (browser ka link preview, external
-# monitor, koi bhi bina-websocket-upgrade wala hit) bas ignore kar dete hain -
-# yeh harmless hai, actual chat clients hamesha proper GET+Upgrade bhejte hain.
-logging.getLogger("websockets").setLevel(logging.CRITICAL)
+# Pehle yahan poora "websockets" logger CRITICAL pe silence kar diya tha taaki
+# stray HEAD-request warnings na aayein - lekin isse asli crash tracebacks
+# (jaise handler() ke andar koi unhandled exception) bhi chhup jaate the,
+# jisse Render logs mein kuch dikhta hi nahi tha jab kuch fail hota tha.
+# Ab sirf woh specific harmless HEAD-request warning filter karte hain,
+# baaki sab (errors, tracebacks) normally print honge.
+logging.basicConfig(level=logging.INFO)
+
+
+class _SuppressHeadRequestNoise(logging.Filter):
+    def filter(self, record):
+        msg = record.getMessage()
+        return "opening handshake failed" not in msg and "did not receive a valid HTTP request" not in msg
+
+
+logging.getLogger("websockets").addFilter(_SuppressHeadRequestNoise())
 
 # room_code -> {"host": websocket, "guest": websocket or None}
 rooms = {}
@@ -73,6 +84,7 @@ async def cleanup(websocket):
 
 
 async def handler(websocket):
+    print(f"[+] Client connected: {websocket.remote_address}")
     try:
         async for message in websocket:
             data = json.loads(message)
@@ -126,6 +138,10 @@ async def handler(websocket):
 
     except websockets.exceptions.ConnectionClosed:
         pass
+    except Exception:
+        import traceback
+        print("[!] Handler crashed:")
+        traceback.print_exc()
     finally:
         await cleanup(websocket)
 
