@@ -18,7 +18,8 @@
 
                 <div class="form-group">
                     <label for="wsUrl">WebSocket URL</label>
-                    <input type="text" id="wsUrl" value="wss://e2e-encrypted-messaging.onrender.com" autocomplete="off">
+                    <!-- Changed default value for local testing -->
+                    <input type="text" id="wsUrl" value="ws://localhost:10000" autocomplete="off">
                 </div>
 
                 <!-- Mode picker -->
@@ -43,7 +44,8 @@
                     <div class="room-code-display" id="roomCodeDisplay">•••••</div>
                     <button type="button" id="copyCodeBtn" class="btn-outline">Copy Code</button>
                     <div class="waiting-row">
-                        <span class="spinner"></span>
+                        <!-- Added an ID to the spinner -->
+                        <span class="spinner" id="loadingSpinner"></span>
                         <p class="waiting-status" id="waitingStatus">Creating room...</p>
                     </div>
                     <button type="button" id="cancelRoomBtn" class="btn-link">Cancel</button>
