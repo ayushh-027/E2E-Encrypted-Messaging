@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import random
 from http import HTTPStatus
 import websockets
 
@@ -11,8 +12,21 @@ import websockets
 # yeh harmless hai, actual chat clients hamesha proper GET+Upgrade bhejte hain.
 logging.getLogger("websockets").setLevel(logging.CRITICAL)
 
-clients = {}   # username -> websocket connection
-pending = {}   # username -> list of queued messages waiting for them to connect
+# room_code -> {"host": websocket, "guest": websocket or None}
+rooms = {}
+# websocket -> room_code (reverse lookup, so we know who a socket is paired with)
+ws_room = {}
+
+# Ambiguous characters (0/O, 1/I/L) chhod diye hain taaki code type karna aasan rahe
+CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+CODE_LENGTH = 5
+
+
+def generate_room_code():
+    while True:
+        code = "".join(random.choice(CODE_CHARS) for _ in range(CODE_LENGTH))
+        if code not in rooms:
+            return code
 
 
 def process_request(connection, request):
@@ -23,54 +37,97 @@ def process_request(connection, request):
     return None
 
 
+def get_partner(websocket):
+    """Given a socket, find the other socket in its room (or None)."""
+    code = ws_room.get(websocket)
+    if not code:
+        return None
+    room = rooms.get(code)
+    if not room:
+        return None
+    if room["host"] is websocket:
+        return room["guest"]
+    if room["guest"] is websocket:
+        return room["host"]
+    return None
+
+
+async def cleanup(websocket):
+    """Room ko tear down karo jab koi bhi side disconnect ho jaye - dono
+    ko wapas lobby mein bhej do, "half-open" room mein latakne mat do."""
+    code = ws_room.pop(websocket, None)
+    if not code:
+        return
+    room = rooms.pop(code, None)
+    if not room:
+        return
+
+    other = room["guest"] if room["host"] is websocket else room["host"]
+    if other:
+        ws_room.pop(other, None)
+        try:
+            await other.send(json.dumps({"type": "partner_left"}))
+        except websockets.exceptions.ConnectionClosed:
+            pass
+    print(f"[-] Room {code} closed")
+
+
 async def handler(websocket):
-    username = None
     try:
         async for message in websocket:
             data = json.loads(message)
+            msg_type = data.get("type")
 
-            if data["type"] == "register":
-                username = data["username"]
-                clients[username] = websocket
-                print(f"[+] {username} connected")
-                await websocket.send(json.dumps({"type": "ok"}))
+            if msg_type == "create_room":
+                code = generate_room_code()
+                rooms[code] = {"host": websocket, "guest": None}
+                ws_room[websocket] = code
+                print(f"[+] Room {code} created")
+                await websocket.send(json.dumps({"type": "room_created", "code": code}))
 
-                # Jo messages iske offline rehte hue aaye the (jaise partner
-                # ki public key), unhe ab deliver kar do
-                queued = pending.pop(username, [])
-                for item in queued:
+            elif msg_type == "join_room":
+                code = (data.get("code") or "").strip().upper()
+                room = rooms.get(code)
+
+                if not room or room["host"] is None:
                     await websocket.send(json.dumps({
-                        "type": "from",
-                        "sender": item["sender"],
-                        "payload": item["payload"]
+                        "type": "error",
+                        "message": "Room not found. Check the code and try again."
                     }))
+                elif room["guest"] is not None:
+                    await websocket.send(json.dumps({
+                        "type": "error",
+                        "message": "That room is already full."
+                    }))
+                else:
+                    room["guest"] = websocket
+                    ws_room[websocket] = code
+                    print(f"[+] Guest joined room {code}")
+                    await websocket.send(json.dumps({"type": "room_joined", "code": code}))
+                    await room["host"].send(json.dumps({"type": "partner_joined"}))
 
-            elif data["type"] == "msg":
-                target = data["target"]
-                if target in clients:
-                    await clients[target].send(json.dumps({
+            elif msg_type == "msg":
+                # Ab explicit target username ki zaroorat nahi - sender jis room
+                # mein hai, uska partner hi automatically target ban jaata hai
+                partner = get_partner(websocket)
+                if partner:
+                    await partner.send(json.dumps({
                         "type": "from",
-                        "sender": username,
                         "payload": data["payload"]
                     }))
                 else:
-                    # Target abhi tak connect nahi hua - message discard mat karo,
-                    # queue mein daal do, jab wo register karega tab deliver ho jayega
-                    pending.setdefault(target, []).append({
-                        "sender": username,
-                        "payload": data["payload"]
-                    })
                     await websocket.send(json.dumps({
                         "type": "error",
-                        "message": f"{target} abhi offline hai, message unke connect hote hi deliver ho jayega"
+                        "message": "Your partner isn't connected yet."
                     }))
+
+            elif msg_type == "leave_room":
+                await cleanup(websocket)
 
     except websockets.exceptions.ConnectionClosed:
         pass
     finally:
-        if username and clients.get(username) is websocket:
-            del clients[username]
-        print(f"[-] {username} disconnected")
+        await cleanup(websocket)
 
 
 async def main():
