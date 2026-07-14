@@ -118,7 +118,18 @@ function connectSocket(mode, code) {
         return;
     }
 
+    // Render free-tier cold starts can take 30-60s, but if it's still
+    // pending after 20s something is actually wrong (service asleep as a
+    // background worker with no exposed port, wrong URL, etc.) rather than
+    // just waking up - so give clear feedback instead of hanging forever.
+    const connectTimeout = setTimeout(() => {
+        if (ws && ws.readyState === WebSocket.CONNECTING) {
+            UI.waitingStatus.textContent = 'Still waiting on the server (20s+). It may be asleep, misconfigured, or unreachable.';
+        }
+    }, 20000);
+
     ws.onopen = () => {
+        clearTimeout(connectTimeout);
         if (mode === 'create') {
             ws.send(JSON.stringify({ type: 'create_room' }));
         } else {
@@ -135,6 +146,7 @@ function connectSocket(mode, code) {
     };
 
     ws.onclose = () => {
+        clearTimeout(connectTimeout);
         stopKeyExchange();
         if (!UI.screen2.classList.contains('hidden')) {
             updateStatus('Disconnected', 'red');
