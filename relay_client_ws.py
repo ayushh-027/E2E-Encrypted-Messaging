@@ -10,7 +10,7 @@ import websockets
 
 
 async def main():
-    server_url = input("Relay server WebSocket URL (e.g. wss://your-app.onrender.com): ").strip()
+    server_url = input("Relay server WebSocket URL (e.g.  wss://e2e-encrypted-messaging-2.onrender.com/): ").strip()
     mode = input("Room banani hai ya join karni hai? [create/join]: ").strip().lower()
 
     public_key, private_key = rsa.newkeys(2048)
