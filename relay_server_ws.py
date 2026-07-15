@@ -8,45 +8,30 @@ from collections import defaultdict, deque
 from http import HTTPStatus
 import websockets
 
-# --- Security/abuse-hardening constants ---
-MAX_PAYLOAD_B64_CHARS = 4000  # RSA-2048 PEM pubkey (~800B) and ciphertext (~344B) both fit well under this
+MAX_PAYLOAD_B64_CHARS = 4000
 RATE_LIMIT_WINDOW_SEC = 60
-RATE_LIMIT_MAX_ACTIONS = 20  # create_room/join_room attempts per IP per window
-MAX_ROOMS = 5000  # hard ceiling so an attacker can't exhaust memory with empty rooms
+RATE_LIMIT_MAX_ACTIONS = 20
+MAX_ROOMS = 5000
 
-# Comma-separated list of allowed Origin header values, e.g.
-# "https://e2e-encrypted-messaging-1-rnzn.onrender.com,https://mysite.com"
-# Set this env var on Render. If unset, origin checking is skipped (dev-friendly default).
 _allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "").strip()
 ALLOWED_ORIGINS = [o.strip() for o in _allowed_origins_env.split(",") if o.strip()] or None
 
-# Pehle yahan poora "websockets" logger CRITICAL pe silence kar diya tha taaki
-# stray HEAD-request warnings na aayein - lekin isse asli crash tracebacks
-# (jaise handler() ke andar koi unhandled exception) bhi chhup jaate the,
-# jisse Render logs mein kuch dikhta hi nahi tha jab kuch fail hota tha.
-# Ab sirf woh specific harmless HEAD-request warning filter karte hain,
-# baaki sab (errors, tracebacks) normally print honge.
 logging.basicConfig(level=logging.INFO)
-
 
 class _SuppressHeadRequestNoise(logging.Filter):
     def filter(self, record):
         msg = record.getMessage()
         return "opening handshake failed" not in msg and "did not receive a valid HTTP request" not in msg
 
-
 logging.getLogger("websockets").addFilter(_SuppressHeadRequestNoise())
 
-# room_code -> {"host": websocket, "guest": websocket or None}
 rooms = {}
-# websocket -> room_code (reverse lookup, so we know who a socket is paired with)
+
 ws_room = {}
-# ip -> deque of timestamps for recent create_room/join_room attempts
+
 recent_actions = defaultdict(deque)
 
-
 def rate_limited(ip):
-    """True if this IP has exceeded RATE_LIMIT_MAX_ACTIONS in the last window."""
     now = time.monotonic()
     q = recent_actions[ip]
     while q and now - q[0] > RATE_LIMIT_WINDOW_SEC:
@@ -56,10 +41,8 @@ def rate_limited(ip):
     q.append(now)
     return False
 
-# Ambiguous characters (0/O, 1/I/L) chhod diye hain taaki code type karna aasan rahe
 CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
 CODE_LENGTH = 5
-
 
 def generate_room_code():
     while True:
@@ -67,17 +50,12 @@ def generate_room_code():
         if code not in rooms:
             return code
 
-
 def process_request(connection, request):
-    """Plain HTTP GET requests (browser mein link khola, health check, etc.)
-    ko ek simple "OK" response de do, error throw karne ke bajaye."""
     if request.headers.get("Upgrade", "").lower() != "websocket":
         return connection.respond(HTTPStatus.OK, "Relay server is running.\n")
     return None
 
-
 def get_partner(websocket):
-    """Given a socket, find the other socket in its room (or None)."""
     code = ws_room.get(websocket)
     if not code:
         return None
@@ -90,10 +68,7 @@ def get_partner(websocket):
         return room["host"]
     return None
 
-
 async def cleanup(websocket):
-    """Room ko tear down karo jab koi bhi side disconnect ho jaye - dono
-    ko wapas lobby mein bhej do, "half-open" room mein latakne mat do."""
     code = ws_room.pop(websocket, None)
     if not code:
         return
@@ -109,7 +84,6 @@ async def cleanup(websocket):
         except websockets.exceptions.ConnectionClosed:
             pass
     print(f"[-] Room {code} closed")
-
 
 async def handler(websocket):
     ip = websocket.remote_address[0] if websocket.remote_address else "unknown"
@@ -164,8 +138,7 @@ async def handler(websocket):
                         "message": "Message rejected: payload too large."
                     }))
                     continue
-                # Ab explicit target username ki zaroorat nahi - sender jis room
-                # mein hai, uska partner hi automatically target ban jaata hai
+
                 partner = get_partner(websocket)
                 if partner:
                     await partner.send(json.dumps({
@@ -190,9 +163,8 @@ async def handler(websocket):
     finally:
         await cleanup(websocket)
 
-
 async def main():
-    # Render apne aap PORT environment variable set karta hai - isi pe bind karna zaroori hai
+
     port = int(os.environ.get("PORT", 10000))
     if ALLOWED_ORIGINS is None:
         print("[!] ALLOWED_ORIGINS not set - accepting connections from any origin. "
@@ -203,8 +175,7 @@ async def main():
         origins=ALLOWED_ORIGINS,
     ):
         print(f"Relay server (WebSocket) running on port {port}")
-        await asyncio.Future()  # hamesha ke liye chalta rahe
-
+        await asyncio.Future()
 
 if __name__ == "__main__":
     asyncio.run(main())
