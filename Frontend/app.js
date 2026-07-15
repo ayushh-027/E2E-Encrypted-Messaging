@@ -31,8 +31,6 @@ let roomCode = '';
 let keyExchangeInterval = null;
 const MAX_BYTES = 245;
 
-// ---------- Lobby: create / join room ----------
-
 UI.createRoomBtn.addEventListener('click', () => startFlow('create'));
 
 UI.joinRoomBtn.addEventListener('click', () => {
@@ -93,8 +91,6 @@ function startFlow(mode, code) {
     UI.waitingStatus.textContent = mode === 'create' ? 'Creating room...' : 'Joining room...';
     UI.copyCodeBtn.classList.toggle('hidden', mode === 'join');
 
-    // RSA key generation is the slow part (~1-2s) - kick it off while the
-    // socket connects so both finish around the same time.
     keyPair = new JSEncrypt({ default_key_size: 2048 });
     setTimeout(() => {
         try {
@@ -118,10 +114,6 @@ function connectSocket(mode, code) {
         return;
     }
 
-    // Render free-tier cold starts can take 30-60s, but if it's still
-    // pending after 20s something is actually wrong (service asleep as a
-    // background worker with no exposed port, wrong URL, etc.) rather than
-    // just waking up - so give clear feedback instead of hanging forever.
     const connectTimeout = setTimeout(() => {
         if (ws && ws.readyState === WebSocket.CONNECTING) {
             UI.waitingStatus.textContent = 'Still waiting on the server (20s+). It may be asleep, misconfigured, or unreachable.';
@@ -154,7 +146,6 @@ function connectSocket(mode, code) {
             UI.chatInput.disabled = true;
             UI.sendBtn.disabled = true;
         } else if (!UI.waitingPanel.classList.contains('hidden')) {
-            // Handle error when waiting for connection
             UI.waitingStatus.textContent = 'Connection failed. Is the server running?';
             UI.loadingSpinner.classList.add('hide-spinner');
             UI.roomCodeDisplay.textContent = 'ERROR';
@@ -170,8 +161,6 @@ function connectSocket(mode, code) {
         }
     };
 }
-
-// ---------- Server message routing ----------
 
 function handleServerMessage(data) {
     switch (data.type) {
@@ -247,8 +236,6 @@ function handleIncomingPayload(data) {
         addChatMessage(decrypted, 'partner');
     }
 }
-
-// ---------- Chat screen ----------
 
 function enterChat() {
     UI.screen1.classList.add('hidden');
