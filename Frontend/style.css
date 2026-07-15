@@ -1,12 +1,11 @@
-/* style.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap');
 
 :root {
-    --bg-color: #0f172a; /* Slate 900 */
-    --card-bg: #1e293b; /* Slate 800 */
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
-    --primary: #3b82f6; /* Blue 500 */
+    --primary: #3b82f6;
     --primary-hover: #2563eb;
     --error: #ef4444;
     --success: #10b981;
@@ -62,7 +61,6 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Screen 1 */
 #screen1 {
     justify-content: center;
     align-items: center;
@@ -153,8 +151,6 @@ button:disabled {
     opacity: 0.7;
     cursor: not-allowed;
 }
-
-/* --- Lobby: create/join room --- */
 
 .mode-select {
     display: flex;
@@ -249,7 +245,6 @@ button:disabled {
     to { transform: rotate(360deg); }
 }
 
-/* Screen 2 */
 .chat-header {
     background-color: var(--card-bg);
     padding: 16px 20px;
@@ -434,10 +429,9 @@ button:disabled {
     flex-shrink: 0;
 }
 #sendBtn svg {
-    margin-left: -2px; /* optical alignment */
+    margin-left: -2px;
 }
 
-/* Scrollbar styling */
 ::-webkit-scrollbar {
     width: 6px;
 }
@@ -452,7 +446,6 @@ button:disabled {
     background: var(--text-muted);
 }
 
-/* Utility to hide the spinner on errors */
 .hide-spinner {
     display: none !important;
 }
