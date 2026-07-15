@@ -16,10 +16,10 @@
                 <h1>E2E Encrypted Chat</h1>
                 <p class="subtitle">Secure WebSocket Relay</p>
 
-                <div class="form-group">
+                <div class="form-group hidden">
                     <label for="wsUrl">WebSocket URL</label>
-                    <!-- Changed default value for local testing -->
-                    <input type="text" id="wsUrl" value=" wss://e2e-encrypted-messaging-2.onrender.com/" autocomplete="off">
+                    <!-- Hidden from users - value is fixed to the deployed relay server -->
+                    <input type="text" id="wsUrl" value="https://e2e-encrypted-messaging-2.onrender.com" autocomplete="off">
                 </div>
 
                 <!-- Mode picker -->
