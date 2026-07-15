@@ -5,31 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E2E Encrypted Chat</title>
     <link rel="stylesheet" href="style.css">
-    <!-- JSEncrypt for RSA-2048 with PKCS#1 v1.5 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsencrypt/3.3.2/jsencrypt.min.js"></script>
 </head>
 <body>
     <div id="app">
-        <!-- Screen 1: Lobby (create or join a room) -->
-        <div id="screen1" class="screen">
+<div id="screen1" class="screen">
             <div class="card">
                 <h1>E2E Encrypted Chat</h1>
                 <p class="subtitle">Secure WebSocket Relay</p>
 
                 <div class="form-group hidden">
                     <label for="wsUrl">WebSocket URL</label>
-                    <!-- Hidden from users - value is fixed to the deployed relay server -->
-                    <input type="text" id="wsUrl" value="https://e2e-encrypted-messaging-2.onrender.com" autocomplete="off">
+<input type="text" id="wsUrl" value="wss://e2e-encrypted-messaging-2.onrender.com" autocomplete="off">
                 </div>
 
-                <!-- Mode picker -->
-                <div id="modeSelect" class="mode-select">
+<div id="modeSelect" class="mode-select">
                     <button type="button" id="createRoomBtn">Create Room</button>
                     <button type="button" id="joinRoomBtn" class="btn-outline">Join Room</button>
                 </div>
 
-                <!-- Join-with-code form -->
-                <form id="joinForm" class="hidden">
+<form id="joinForm" class="hidden">
                     <div class="form-group">
                         <label for="roomCodeInput">Room Code</label>
                         <input type="text" id="roomCodeInput" class="code-input" placeholder="ABCDE" maxlength="5" autocomplete="off">
@@ -38,14 +33,12 @@
                     <button type="button" id="joinBackBtn" class="btn-link">← Back</button>
                 </form>
 
-                <!-- Waiting / room-code display -->
-                <div id="waitingPanel" class="hidden">
+<div id="waitingPanel" class="hidden">
                     <p class="waiting-label">Share this code with your partner</p>
                     <div class="room-code-display" id="roomCodeDisplay">•••••</div>
                     <button type="button" id="copyCodeBtn" class="btn-outline">Copy Code</button>
                     <div class="waiting-row">
-                        <!-- Added an ID to the spinner -->
-                        <span class="spinner" id="loadingSpinner"></span>
+<span class="spinner" id="loadingSpinner"></span>
                         <p class="waiting-status" id="waitingStatus">Creating room...</p>
                     </div>
                     <button type="button" id="cancelRoomBtn" class="btn-link">Cancel</button>
@@ -53,8 +46,7 @@
             </div>
         </div>
 
-        <!-- Screen 2: Chat -->
-        <div id="screen2" class="screen hidden">
+<div id="screen2" class="screen hidden">
             <div class="chat-header">
                 <div class="header-info">
                     <h2 id="chatTargetName">Room</h2>
