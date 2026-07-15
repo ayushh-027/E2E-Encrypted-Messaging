@@ -4,11 +4,6 @@ import base64
 import rsa
 import websockets
 
-# Is client ko relay_server_ws.py ke room-code protocol se match karne ke
-# liye rewrite kiya gaya hai (pehle wala register/target-username wala
-# protocol server se match nahi karta tha).
-
-
 async def main():
     server_url = input("Relay server WebSocket URL (e.g. wss://your-app.onrender.com): ").strip()
     mode = input("Room banani hai ya join karni hai? [create/join]: ").strip().lower()
@@ -91,7 +86,6 @@ async def main():
 
         await ws.send(json.dumps({"type": "leave_room"}))
         receiver_task.cancel()
-
 
 if __name__ == "__main__":
     asyncio.run(main())
