@@ -1,2 +1,5 @@
 websockets>=13.0
+# rsa is only used by relay_client_ws.py (the CLI test client), not by
+# relay_server_ws.py itself. Safe to drop from server-only Render deploys
+# if you're not running the CLI client there.
 rsa
